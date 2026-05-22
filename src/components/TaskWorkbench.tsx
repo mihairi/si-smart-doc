@@ -17,7 +17,7 @@ import { TASKS, buildPrompt, type TaskId } from "@/lib/tasks";
 import { type LLMConfig, streamChat } from "@/lib/llm-service";
 import type { ExtractedDoc } from "@/lib/document-extract";
 import { exportToDocx } from "@/lib/docx-export";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface Props {
   config: LLMConfig;
@@ -76,7 +76,7 @@ export function TaskWorkbench({ config, docs }: Props) {
     if (!output.trim()) return;
     const title = `${activeTask.label} — ${new Date().toLocaleDateString()}`;
     await exportToDocx(title, output, `lex-${task}-${Date.now()}.docx`);
-    toast({ title: "Exported", description: "Word document downloaded." });
+    toast.success("Word document downloaded.");
   };
 
   return (

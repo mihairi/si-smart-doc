@@ -5,7 +5,7 @@ import { Scale, ShieldCheck, FileStack } from "lucide-react";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { DocumentUploader } from "@/components/DocumentUploader";
 import { TaskWorkbench } from "@/components/TaskWorkbench";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { loadConfig, type LLMConfig } from "@/lib/llm-service";
 import type { ExtractedDoc } from "@/lib/document-extract";
 
