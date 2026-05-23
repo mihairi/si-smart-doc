@@ -102,36 +102,64 @@ export async function streamChat({
     } else {
       const res = await fetch(`${base}/v1/chat/completions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
         body: JSON.stringify({ model: config.model, messages, stream: true }),
         signal,
       });
-      if (!res.ok) throw new Error(`LM Studio error ${res.status}`);
-      const reader = res.body!.getReader();
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        throw new Error(`LM Studio error ${res.status}: ${body.slice(0, 300) || res.statusText}`);
+      }
+      if (!res.body) throw new Error("LM Studio returned no response body.");
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buf = "";
+      let deltas = 0;
+      let rawBytes = 0;
+      const flushLine = (rawLine: string) => {
+        const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
+        if (!line) return false;
+        // Support both SSE ("data: {...}") and raw JSON-per-line fallbacks
+        const payload = line.startsWith("data:") ? line.slice(5).trim() : line.trim();
+        if (!payload) return false;
+        if (payload === "[DONE]") return true;
+        try {
+          const p = JSON.parse(payload);
+          const c =
+            p.choices?.[0]?.delta?.content ??
+            p.choices?.[0]?.message?.content ??
+            p.choices?.[0]?.text;
+          if (c) {
+            deltas++;
+            onDelta(c);
+          }
+        } catch {
+          // ignore non-JSON keepalive lines
+        }
+        return false;
+      };
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        rawBytes += value?.byteLength ?? 0;
         buf += decoder.decode(value, { stream: true });
         let idx: number;
         while ((idx = buf.indexOf("\n")) !== -1) {
-          let line = buf.slice(0, idx);
+          const line = buf.slice(0, idx);
           buf = buf.slice(idx + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (!line.startsWith("data:")) continue;
-          const json = line.slice(5).trim();
-          if (!json) continue;
-          if (json === "[DONE]") {
+          if (flushLine(line)) {
             onDone();
             return;
           }
-          try {
-            const p = JSON.parse(json);
-            const c = p.choices?.[0]?.delta?.content;
-            if (c) onDelta(c);
-          } catch {}
         }
+      }
+      if (buf.trim()) flushLine(buf);
+      if (deltas === 0) {
+        console.warn("[llm] no deltas parsed. rawBytes=", rawBytes);
+        onError(
+          `No content received from LM Studio (${rawBytes} bytes). Make sure the loaded model supports chat completions and that "${config.model}" matches the model ID shown in LM Studio's Server tab.`
+        );
+        return;
       }
       onDone();
     }
