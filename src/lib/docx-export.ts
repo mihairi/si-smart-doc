@@ -1,5 +1,6 @@
 import { Document, Packer, Paragraph, HeadingLevel, TextRun } from "docx";
-import { saveAs } from "file-saver";
+import FileSaver from "file-saver";
+const { saveAs } = FileSaver;
 
 function parseMarkdownToParagraphs(md: string): Paragraph[] {
   const lines = md.split(/\r?\n/);
