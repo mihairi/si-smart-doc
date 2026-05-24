@@ -7,6 +7,7 @@ export type TaskId =
   | "compliance"
   | "policy"
   | "transform"
+  | "translate"
   | "draft"
   | "merge"
   | "custom";
