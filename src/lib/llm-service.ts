@@ -176,6 +176,27 @@ export async function streamChat({
   }
 }
 
+/** Non-streaming chat completion — returns the full assistant text. */
+export async function chatComplete(opts: {
+  config: LLMConfig;
+  messages: ChatMessage[];
+  signal?: AbortSignal;
+}): Promise<string> {
+  let acc = "";
+  let err: string | null = null;
+  await streamChat({
+    ...opts,
+    onDelta: (t) => {
+      acc += t;
+    },
+    onDone: () => {},
+    onError: (m) => {
+      err = m;
+    },
+  });
+  if (err) throw new Error(err);
+  return acc;
+
 const KEY = "corpdoc-llm-config";
 export function loadConfig(): LLMConfig {
   try {
