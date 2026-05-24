@@ -126,7 +126,7 @@ function Stat({
         {icon}
         {label}
       </div>
-      <div className="font-display text-2xl mt-1">{value}</div>
+      <div className="font-display mt-1 text-base">{value}</div>
     </div>
   );
 }
