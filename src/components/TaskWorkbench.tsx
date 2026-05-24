@@ -109,6 +109,10 @@ export function TaskWorkbench({ config, docs }: Props) {
         </div>
       </div>
 
+      {task === "translate" ? (
+        <TranslatorPanel config={config} docs={docs} />
+      ) : (
+        <>
       <div>
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">
           Instructions
