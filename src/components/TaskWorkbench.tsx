@@ -194,6 +194,8 @@ export function TaskWorkbench({ config, docs }: Props) {
           </article>
         )}
       </motion.div>
+        </>
+      )}
     </div>
   );
 }
