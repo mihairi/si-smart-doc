@@ -7,6 +7,7 @@ export type TaskId =
   | "compliance"
   | "policy"
   | "transform"
+  | "translate"
   | "draft"
   | "merge"
   | "custom";
@@ -54,6 +55,13 @@ export const TASKS: TaskDef[] = [
     description: "e.g. turn a slide deck into a descriptive Word report.",
     minDocs: 1,
     promptHint: "Target format and audience (e.g. narrative Word doc for execs).",
+  },
+  {
+    id: "translate",
+    label: "Translate document",
+    description: "Translate between English, German and Romanian — same file type, format preserved.",
+    minDocs: 1,
+    promptHint: "",
   },
   {
     id: "draft",

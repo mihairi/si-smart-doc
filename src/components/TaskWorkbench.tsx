@@ -17,6 +17,7 @@ import { TASKS, buildPrompt, type TaskId } from "@/lib/tasks";
 import { type LLMConfig, streamChat } from "@/lib/llm-service";
 import type { ExtractedDoc } from "@/lib/document-extract";
 import { exportToDocx } from "@/lib/docx-export";
+import { TranslatorPanel } from "./TranslatorPanel";
 import { toast } from "sonner";
 
 interface Props {
@@ -108,6 +109,10 @@ export function TaskWorkbench({ config, docs }: Props) {
         </div>
       </div>
 
+      {task === "translate" ? (
+        <TranslatorPanel config={config} docs={docs} />
+      ) : (
+        <>
       <div>
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">
           Instructions
@@ -189,6 +194,8 @@ export function TaskWorkbench({ config, docs }: Props) {
           </article>
         )}
       </motion.div>
+        </>
+      )}
     </div>
   );
 }
