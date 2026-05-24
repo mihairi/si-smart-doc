@@ -57,6 +57,13 @@ export const TASKS: TaskDef[] = [
     promptHint: "Target format and audience (e.g. narrative Word doc for execs).",
   },
   {
+    id: "translate",
+    label: "Translate document",
+    description: "Translate between English, German and Romanian — same file type, format preserved.",
+    minDocs: 1,
+    promptHint: "",
+  },
+  {
     id: "draft",
     label: "Draft from scratch",
     description: "Produce a new business document, optionally using uploads as models.",
