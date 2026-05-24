@@ -9,6 +9,8 @@ export interface ExtractedDoc {
   type: string;
   text: string;
   preview: string;
+  /** Original file bytes — kept so we can do format-preserving transforms (e.g. translation). */
+  bytes?: ArrayBuffer;
 }
 
 async function extractPdf(file: File): Promise<string> {
