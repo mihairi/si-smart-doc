@@ -196,6 +196,9 @@ export async function chatComplete(opts: {
   });
   if (err) throw new Error(err);
   return acc;
+}
+
+
 
 const KEY = "corpdoc-llm-config";
 export function loadConfig(): LLMConfig {
