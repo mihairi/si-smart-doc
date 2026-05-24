@@ -60,12 +60,13 @@ async function extractText(file: File): Promise<string> {
 export async function extractDocument(file: File): Promise<ExtractedDoc> {
   const name = file.name.toLowerCase();
   let text = "";
+  let bytes: ArrayBuffer | undefined;
   try {
-    if (name.endsWith(".pdf")) text = await extractPdf(file);
-    else if (name.endsWith(".docx")) text = await extractDocx(file);
-    else if (name.endsWith(".pptx")) text = await extractPptx(file);
-    else if (name.match(/\.(txt|md|csv|json|html?|xml|log)$/)) text = await extractText(file);
-    else text = await extractText(file);
+    bytes = await file.arrayBuffer();
+    if (name.endsWith(".pdf")) text = await extractPdfFromBuffer(bytes);
+    else if (name.endsWith(".docx")) text = await extractDocxFromBuffer(bytes);
+    else if (name.endsWith(".pptx")) text = await extractPptxFromBuffer(bytes);
+    else text = new TextDecoder().decode(bytes);
   } catch (e: any) {
     text = `[Failed to extract: ${e?.message || "unknown error"}]`;
   }
@@ -77,6 +78,7 @@ export async function extractDocument(file: File): Promise<ExtractedDoc> {
     type: file.type || name.split(".").pop() || "file",
     text,
     preview,
+    bytes,
   };
 }
 
