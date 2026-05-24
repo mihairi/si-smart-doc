@@ -13,12 +13,11 @@ export interface ExtractedDoc {
   bytes?: ArrayBuffer;
 }
 
-async function extractPdf(file: File): Promise<string> {
+async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
   const pdfjs: any = await import("pdfjs-dist");
   const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
   pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const pdf = await pdfjs.getDocument({ data: buf.slice(0) }).promise;
   const out: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -28,14 +27,12 @@ async function extractPdf(file: File): Promise<string> {
   return out.join("\n\n");
 }
 
-async function extractDocx(file: File): Promise<string> {
-  const buf = await file.arrayBuffer();
+async function extractDocxFromBuffer(buf: ArrayBuffer): Promise<string> {
   const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
   return value;
 }
 
-async function extractPptx(file: File): Promise<string> {
-  const buf = await file.arrayBuffer();
+async function extractPptxFromBuffer(buf: ArrayBuffer): Promise<string> {
   const zip = await JSZip.loadAsync(buf);
   const slides = Object.keys(zip.files)
     .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
@@ -53,9 +50,6 @@ async function extractPptx(file: File): Promise<string> {
   return parts.join("\n\n");
 }
 
-async function extractText(file: File): Promise<string> {
-  return await file.text();
-}
 
 export async function extractDocument(file: File): Promise<ExtractedDoc> {
   const name = file.name.toLowerCase();
