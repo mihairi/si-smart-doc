@@ -24,11 +24,30 @@ export function DocumentUploader({ docs, onChange }: Props) {
       if (!files || !files.length) return;
       setBusy(true);
       const extracted: ExtractedDoc[] = [];
-      for (const f of Array.from(files)) {
-        extracted.push(await extractDocument(f));
+      try {
+        for (const f of Array.from(files)) {
+          try {
+            console.log("[upload] extracting", f.name, f.size, f.type);
+            const doc = await extractDocument(f);
+            console.log("[upload] done", f.name, "chars=", doc.text.length);
+            extracted.push(doc);
+          } catch (err: any) {
+            console.error("[upload] failed", f.name, err);
+            extracted.push({
+              id: crypto.randomUUID(),
+              name: f.name,
+              size: f.size,
+              type: f.type || "file",
+              text: `[Failed to extract: ${err?.message || "unknown error"}]`,
+              preview: `Failed: ${err?.message || "unknown error"}`,
+            });
+          }
+        }
+        onChange([...docs, ...extracted]);
+      } finally {
+        setBusy(false);
+        if (inputRef.current) inputRef.current.value = "";
       }
-      onChange([...docs, ...extracted]);
-      setBusy(false);
     },
     [docs, onChange]
   );
