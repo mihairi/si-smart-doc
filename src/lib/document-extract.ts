@@ -78,7 +78,7 @@ export async function extractDocument(file: File): Promise<ExtractedDoc> {
   }
   const preview = text.slice(0, 280).replace(/\s+/g, " ").trim();
   return {
-    id: crypto.randomUUID(),
+    id: uid(),
     name: file.name,
     size: file.size,
     type: file.type || name.split(".").pop() || "file",
