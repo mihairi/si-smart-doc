@@ -2,6 +2,13 @@
 import mammoth from "mammoth";
 import JSZip from "jszip";
 
+function uid(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {}
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export interface ExtractedDoc {
   id: string;
   name: string;
@@ -9,6 +16,9 @@ export interface ExtractedDoc {
   type: string;
   text: string;
   preview: string;
+  /** Original file bytes — kept so we can do format-preserving transforms (e.g. translation). */
+  bytes?: ArrayBuffer;
+}
   /** Original file bytes — kept so we can do format-preserving transforms (e.g. translation). */
   bytes?: ArrayBuffer;
 }
