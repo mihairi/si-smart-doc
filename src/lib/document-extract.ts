@@ -19,9 +19,6 @@ export interface ExtractedDoc {
   /** Original file bytes — kept so we can do format-preserving transforms (e.g. translation). */
   bytes?: ArrayBuffer;
 }
-  /** Original file bytes — kept so we can do format-preserving transforms (e.g. translation). */
-  bytes?: ArrayBuffer;
-}
 
 async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
   // Use the legacy build — works without a separate worker file in all browsers.
