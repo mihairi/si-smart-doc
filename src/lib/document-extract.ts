@@ -14,18 +14,14 @@ export interface ExtractedDoc {
 }
 
 async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
-  const pdfjs: any = await import("pdfjs-dist");
-  try {
-    const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-  } catch (e) {
-    console.warn("[pdf] worker import failed, falling back to no-worker mode", e);
-    pdfjs.GlobalWorkerOptions.workerSrc = "";
-  }
+  // Use the legacy build — works without a separate worker file in all browsers.
+  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = "";
   const pdf = await pdfjs.getDocument({
     data: buf.slice(0),
-    disableWorker: !pdfjs.GlobalWorkerOptions.workerSrc,
+    disableWorker: true,
     isEvalSupported: false,
+    useSystemFonts: true,
   }).promise;
   const out: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
