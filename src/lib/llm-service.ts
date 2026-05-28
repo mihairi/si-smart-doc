@@ -16,8 +16,8 @@ export interface ChatMessage {
 }
 
 const DEFAULTS: Record<LLMProvider, Omit<LLMConfig, "model">> = {
-  ollama: { provider: "ollama", host: "127.0.0.1", port: "11434" },
-  lmstudio: { provider: "lmstudio", host: "127.0.0.1", port: "1234" },
+  ollama: { provider: "ollama", host: "10.200.20.2", port: "11434" },
+  lmstudio: { provider: "lmstudio", host: "10.200.20.2", port: "1234" },
 };
 
 export function getDefaultConfig(provider: LLMProvider): Omit<LLMConfig, "model"> {
@@ -25,7 +25,7 @@ export function getDefaultConfig(provider: LLMProvider): Omit<LLMConfig, "model"
 }
 
 export function getBaseUrl(config: LLMConfig): string {
-  const host = config.host || "127.0.0.1";
+  const host = config.host || "10.200.20.2";
   const port = config.port || (config.provider === "ollama" ? "11434" : "1234");
   return `http://${host}:${port}`;
 }
