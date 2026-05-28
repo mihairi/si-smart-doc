@@ -2,6 +2,13 @@
 import mammoth from "mammoth";
 import JSZip from "jszip";
 
+function uid(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {}
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export interface ExtractedDoc {
   id: string;
   name: string;
@@ -14,18 +21,14 @@ export interface ExtractedDoc {
 }
 
 async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
-  const pdfjs: any = await import("pdfjs-dist");
-  try {
-    const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-  } catch (e) {
-    console.warn("[pdf] worker import failed, falling back to no-worker mode", e);
-    pdfjs.GlobalWorkerOptions.workerSrc = "";
-  }
+  // Use the legacy build — works without a separate worker file in all browsers.
+  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = "";
   const pdf = await pdfjs.getDocument({
     data: buf.slice(0),
-    disableWorker: !pdfjs.GlobalWorkerOptions.workerSrc,
+    disableWorker: true,
     isEvalSupported: false,
+    useSystemFonts: true,
   }).promise;
   const out: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
@@ -75,7 +78,7 @@ export async function extractDocument(file: File): Promise<ExtractedDoc> {
   }
   const preview = text.slice(0, 280).replace(/\s+/g, " ").trim();
   return {
-    id: crypto.randomUUID(),
+    id: uid(),
     name: file.name,
     size: file.size,
     type: file.type || name.split(".").pop() || "file",
