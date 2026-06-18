@@ -249,6 +249,7 @@ async function translateDocx(
     const updated = await translateOoxmlPart(
       xml,
       "w:t",
+      "w:p",
       config,
       target,
       source,
