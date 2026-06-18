@@ -278,6 +278,7 @@ async function translatePptx(
     const updated = await translateOoxmlPart(
       xml,
       "a:t",
+      "a:p",
       config,
       target,
       source,
