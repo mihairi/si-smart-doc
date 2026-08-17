@@ -20,13 +20,43 @@ export interface ExtractedDoc {
   bytes?: ArrayBuffer;
 }
 
-async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
-  // Use the legacy build — works without a separate worker file in all browsers.
+async function loadPdfjs(): Promise<any> {
   const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = "";
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    const workerUrl = (await import("pdfjs-dist/legacy/build/pdf.worker.min.mjs?url")).default;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  }
+  return pdfjs;
+}
+
+/** OCR a scanned PDF page-by-page in the browser. */
+async function ocrPdf(pdf: any, onProgress?: (msg: string) => void): Promise<string> {
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker(["eng", "deu", "ron"]);
+  const out: string[] = [];
+  try {
+    for (let i = 1; i <= pdf.numPages; i++) {
+      onProgress?.(`OCR page ${i}/${pdf.numPages}`);
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext("2d")!;
+      await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+      const { data } = await worker.recognize(canvas);
+      out.push(data.text || "");
+    }
+  } finally {
+    await worker.terminate();
+  }
+  return out.join("\n\n");
+}
+
+async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
+  const pdfjs = await loadPdfjs();
   const pdf = await pdfjs.getDocument({
     data: buf.slice(0),
-    disableWorker: true,
     isEvalSupported: false,
     useSystemFonts: true,
   }).promise;
@@ -36,8 +66,20 @@ async function extractPdfFromBuffer(buf: ArrayBuffer): Promise<string> {
     const content = await page.getTextContent();
     out.push(content.items.map((it: any) => it.str).join(" "));
   }
-  return out.join("\n\n");
+  const text = out.join("\n\n");
+  // Scanned PDF: little or no embedded text → fall back to OCR.
+  if (text.replace(/\s+/g, "").length < 40 * pdf.numPages) {
+    try {
+      console.log("[pdf] little text found — running OCR");
+      const ocr = await ocrPdf(pdf, (m) => console.log("[pdf]", m));
+      if (ocr.replace(/\s+/g, "").length > text.replace(/\s+/g, "").length) return ocr;
+    } catch (e) {
+      console.error("[pdf] OCR failed", e);
+    }
+  }
+  return text;
 }
+
 
 async function extractDocxFromBuffer(buf: ArrayBuffer): Promise<string> {
   const { value } = await mammoth.extractRawText({ arrayBuffer: buf });
